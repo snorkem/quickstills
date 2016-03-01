@@ -1,0 +1,78 @@
+#!/bin/bash
+theDate=$(date +"%Y-%m-%d")
+FRAMES=1/60
+# Remove SPACE, so filenames with spaces work well.
+#  Correct glob use:
+#+ always use "for" loop, prefix glob, check for existence:
+
+while getopts ":s:d:f:l:\?:" opt; do
+  case $opt in
+	s)
+	  src=$OPTARG >&2
+	  ;;
+	d)
+	  dest=$OPTARG >&2
+	  ;;	 
+	f)
+      FRAMES=,$OPTARG >&2
+      ;;
+    l)
+      LUT="lut3d=$OPTARG" >&2
+      ;;
+    [?])
+      echo echo "usage:"
+	  echo "-s <source> -d <destination> -f <frames> (1/60 is default)  -l <lut file> ">&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+IFS="$(printf '\n\t')"
+for file in ./* ; do # Use "./*" ... NEVER bare "*" ...
+	if [ -e “$src” ] ; then    # Make sure it isn't an empty match.
+	COMMAND ... “$src” ...
+	fi
+	if [ -e “$dest” ] ; then    # Make sure it isn't an empty match.
+	COMMAND ... “$dest” ...
+	fi
+done
+
+function postfix_fix() {
+	if /var/packages/MailServer/target/sbin/postfix status; then
+		sudo postfix reload
+	    echo "postfix is running!"
+	else
+		sudo postfix start 
+		echo "postfix is running!"
+	fi
+}
+
+function gen_stills() {
+	mkdir -p $dest
+	for f in $(find $src -name '*.mov' -or -name '*.r3d' -or -name '*.mxf' -or -name '*.mp4' -or -name '*.dng' -or -name '*.ari' -or -name '*raw') ; do
+			ffmpeg -ss 5 -i $f -b:v 500k -vf "select=gt(scene\,0.2) $LUT, fps=$FRAMES" $dest/img%03d.png
+		done
+	 if [[ -d $dest ]] ; then
+		 zip -rj $dest/screengrabs_$theDate.zip $dest
+	 fi
+}
+
+if [[ $2 != "" ]] ; then
+	gen_stills
+else
+    echo echo "usage:"
+	echo "-s <source> -d <destination> -f <frames> (1/60 is default)  -l <lut file> ">&2
+fi
+	
+#if [[ $mail != "" ]] ; then
+#		postfix_fix > /dev/null 2>&1 #check if mail is running, suppress output
+#		mail -s "Frame Grabs!" $mail < $dest/screengrabs.zip
+#	elif [[ $mail = "" ]] ; then
+#		postfix_fix > /dev/null 2>&1 #check if mail is running, suppress output
+#		mail -s "Frame Grabs!" $LUT < $dest/screengrabs.zip
+#	else
+#		exit
+#	fi		
