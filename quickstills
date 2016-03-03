@@ -1,6 +1,6 @@
 #!/bin/bash
 theDate=$(date +"%Y-%m-%d")
-FRAMES=1/60
+FRAMES=1/30
 # Remove SPACE, so filenames with spaces work well.
 #  Correct glob use:
 #+ always use "for" loop, prefix glob, check for existence:
@@ -17,11 +17,11 @@ while getopts ":s:d:f:l:\?:" opt; do
       FRAMES=,$OPTARG >&2
       ;;
     l)
-      LUT="lut3d=$OPTARG" >&2
+      LUT=,lut3d=$OPTARG >&2
       ;;
     [?])
-      echo echo "usage:"
-	  echo "-s <source> -d <destination> -f <frames> (1/60 is default)  -l <lut file> ">&2
+      echo "usage:"
+	  echo "-s <source> -d <destination> -f <frames> ($FRAMES is default)  -l <lut file> ">&2
       exit 1
       ;;
     :)
